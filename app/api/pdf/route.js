@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+=import { NextResponse } from "next/server";
 import puppeteerCore from "puppeteer-core";
 import chromium from "@sparticuz/chromium-min";
 
@@ -6,14 +6,9 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request) {
   try {
-    // Read HTML string from POST body (assume application/json { html: "<your html>" })
     const { html } = await request.json();
-
-    if (!html || typeof html !== "string") {
-      return NextResponse.json(
-        { error: "Invalid or missing HTML" },
-        { status: 400 }
-      );
+    if (!html) {
+      return NextResponse.json({ error: "Missing 'html' in request body" }, { status: 400 });
     }
 
     const executablePath = await chromium.executablePath(
@@ -29,13 +24,13 @@ export async function POST(request) {
 
     const page = await browser.newPage();
 
-    // Set page content to the HTML you send
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, {
+      waitUntil: "networkidle0",
+    });
 
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
-      margin: { top: "10px", right: "10px", bottom: "10px", left: "10px" },
     });
 
     await browser.close();
@@ -44,14 +39,11 @@ export async function POST(request) {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": "attachment; filename=generated.pdf",
+        "Content-Disposition": "attachment; filename=document.pdf",
       },
     });
   } catch (error) {
     console.error("PDF generation failed:", error);
-    return NextResponse.json(
-      { message: "Error generating PDF" },
-      { status: 500 }
-    );
+    return NextResponse.json({ message: "Error generating PDF" }, { status: 500 });
   }
 }
