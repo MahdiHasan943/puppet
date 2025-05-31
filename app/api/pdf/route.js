@@ -8,13 +8,6 @@ export async function POST(request) {
   try {
     const { html } = await request.json();
 
-    if (!html) {
-      return NextResponse.json(
-        { error: "Missing 'html' in request body" },
-        { status: 400 }
-      );
-    }
-
     const executablePath = await chromium.executablePath(
       "https://github.com/Sparticuz/chromium/releases/download/v133.0.0/chromium-v133.0.0-pack.tar"
     );
@@ -28,6 +21,7 @@ export async function POST(request) {
 
     const page = await browser.newPage();
 
+    // Set the page content with the HTML you received
     await page.setContent(html, { waitUntil: "networkidle0" });
 
     const pdfBuffer = await page.pdf({
@@ -41,7 +35,7 @@ export async function POST(request) {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": "attachment; filename=document.pdf",
+        "Content-Disposition": "attachment; filename=generated.pdf",
       },
     });
   } catch (error) {
